@@ -19,6 +19,14 @@ gizi_keywords = {
     "lemak": "Lemak (g)",
 }
 
+satuan = {
+    "kalori": "kkal",
+    "gula": "g",
+    "karbohidrat": "g",
+    "protein": "g",
+    "lemak": "g",
+}
+
 
 @app.route("/whatsapp", methods=["POST"])
 @app.route("/", methods=["POST"])
@@ -44,7 +52,10 @@ def whatsapp_reply():
         if gizi_diminta:
             # Jika hanya sebagian gizi diminta
             gizi_info = "\n".join(
-                [f"{g.capitalize()}: {row[gizi_keywords[g]]}" for g in gizi_diminta]
+                [
+                    f"{g.capitalize()}: {row[gizi_keywords[g]]} {satuan[g.lower()]}"
+                    for g in gizi_diminta
+                ]
             )
         else:
             # Jika tidak disebutkan, tampilkan semuanya
