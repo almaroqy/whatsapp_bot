@@ -1,1 +1,1 @@
-web: gunicorn waBot_Gizi:waBot_Gizi
+web: gunicorn waBot_Gizi:app
