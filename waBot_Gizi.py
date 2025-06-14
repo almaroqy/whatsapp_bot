@@ -74,8 +74,7 @@ def whatsapp_reply():
     else:
         response_text = (
             "Maaf, makanan tidak ditemukan.\n"
-            "Pastikan mengetik nama makanan dengan tepat atau gunakan kata kunci umum.\n"
-            "Contoh: Nasi Goreng, Ayam Geprek, Mie Goreng"
+            "Pastikan mengetik nama makanan dengan tepat atau gunakan kata kunci yang sesuai."
         )
 
     msg.body(response_text)
