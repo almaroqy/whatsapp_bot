@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 
 # Route untuk halaman utama
-@app.route("/index")
+@app.route("/")
 # Route untuk WhatsApp API
 @app.route("/whatsapp", methods=["POST"])
 @app.route("/")
