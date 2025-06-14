@@ -1,4 +1,4 @@
-Flask
-pandas
-twilio
-gunicorn
+Flask==2.3.3
+pandas==2.2.2
+twilio==9.0.1
+gunicorn==21.2.0
