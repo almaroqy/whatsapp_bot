@@ -5,12 +5,11 @@ import re
 
 app = Flask(__name__)
 
-# Load data
-DATA_PATH = "Database_Makanan_Lengkap.csv"
-df = pd.read_csv(DATA_PATH)
+# Load data makanan
+df = pd.read_csv("Database_Makanan_Lengkap.csv")
 df["nama_lower"] = df["Nama Makanan"].str.lower().str.strip()
 
-# Keyword mapping
+# Mapping gizi dan satuan
 gizi_keywords = {
     "kalori": "Kalori (kkal)",
     "gula": "Gula (g)",
@@ -31,26 +30,71 @@ satuan = {
 @app.route("/whatsapp", methods=["POST"])
 @app.route("/", methods=["POST"])
 def whatsapp_reply():
-    incoming_msg = request.values.get("Body", "").strip().lower()
-
-    # Ambil makanan berdasarkan kata kunci yang cocok sebagian
-    makanan_ditemukan = None
-    for nama in df["nama_lower"]:
-        if nama in incoming_msg:
-            makanan_ditemukan = nama
-            break
+    # Kontrol akses bot
+    bot_aktif = False  # Ubah ke True jika ingin bot aktif
 
     resp = MessagingResponse()
     msg = resp.message()
 
-    if makanan_ditemukan:
-        row = df[df["nama_lower"] == makanan_ditemukan].iloc[0]
+    if not bot_aktif:
+        msg.body("⚠️ Bot saat ini sedang tidak tersedia. Silakan coba lagi nanti.")
+        return str(resp)
+    # Ambil pesan masuk
+    incoming_msg = request.values.get("Body", "").strip().lower()
+    resp = MessagingResponse()
+    msg = resp.message()
 
-        # Cek apakah user menyebut salah satu gizi
+    # Cek input IMT
+    match_berat = re.search(r"berat\s*(\d+)", incoming_msg)
+    match_tinggi = re.search(r"tinggi\s*(\d+)", incoming_msg)
+
+    if match_berat and match_tinggi:
+        berat = float(match_berat.group(1))
+        tinggi_cm = float(match_tinggi.group(1))
+        tinggi_m = tinggi_cm / 100
+
+        imt = berat / (tinggi_m**2)
+        if imt < 18.5:
+            kategori = "Kurus (Underweight)"
+        elif imt < 23:
+            kategori = "Normal"
+        elif imt < 25:
+            kategori = "Overweight"
+        elif imt < 30:
+            kategori = "Obesitas I"
+        else:
+            kategori = "Obesitas II"
+
+        response_text = (
+            f"Berat: {berat} kg\n"
+            f"Tinggi: {tinggi_cm} cm\n"
+            f"IMT kamu: {imt:.2f} ({kategori})\n"
+            "Tetap jaga pola makan seimbang dan rutin beraktivitas ya!"
+        )
+
+        msg.body(response_text)
+        return str(resp)
+
+    # Cek makanan
+    data_makanan = None
+    for nama in df["nama_lower"]:
+        if nama in incoming_msg:
+            data_makanan = nama
+            break
+
+    if data_makanan:
+        row = df[df["nama_lower"] == data_makanan].iloc[0]
         gizi_diminta = [k for k in gizi_keywords if k in incoming_msg]
 
+        warning = []
+        if row["Kalori (kkal)"] > 800:
+            warning.append("⚠️ Kalori tinggi, perhatikan porsi makan.")
+        if row["Gula (g)"] > 25:
+            warning.append("⚠️ Kandungan gula tinggi.")
+        if row["Lemak (g)"] > 30:
+            warning.append("⚠️ Lemak cukup tinggi, batasi konsumsi.")
+
         if gizi_diminta:
-            # Jika hanya sebagian gizi diminta
             gizi_info = "\n".join(
                 [
                     f"{g.capitalize()}: {row[gizi_keywords[g]]} {satuan[g.lower()]}"
@@ -58,7 +102,6 @@ def whatsapp_reply():
                 ]
             )
         else:
-            # Jika tidak disebutkan, tampilkan semuanya
             gizi_info = (
                 f"Kalori: {row['Kalori (kkal)']} kkal\n"
                 f"Gula: {row['Gula (g)']} g\n"
@@ -68,13 +111,14 @@ def whatsapp_reply():
             )
 
         response_text = (
-            f"*{row['Nama Makanan']}* (Warung: {row['Warung']})\n{gizi_info}"
+            f"*{row['Nama Makanan']}* (Warung: {row['Warung']})\n"
+            f"{gizi_info}\n" + ("\n".join(warning) if warning else "")
         )
-
     else:
         response_text = (
-            "Maaf, makanan tidak ditemukan.\n"
-            "Pastikan mengetik nama makanan dengan tepat atau gunakan kata kunci yang sesuai."
+            "Maaf, makanan tidak ditemukan atau format tidak sesuai.\n"
+            "Contoh perhitungan IMT: 'berat 60 tinggi 165'\n"
+            "Contoh cek makanan: 'mie goreng', 'ayam geprek', dst."
         )
 
     msg.body(response_text)
