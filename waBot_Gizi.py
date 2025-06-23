@@ -32,7 +32,7 @@ satuan = {
 def whatsapp_reply():
     # Kontrol akses bot
     bot_aktif = os.getenv("BOT_AKTIF", "true").lower() == "true"
-    nomor_admin = "+6285838810436"
+    nomor_admin = "whatsapp:+6285838810436"
 
     resp = MessagingResponse()
     msg = resp.message()
