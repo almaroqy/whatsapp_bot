@@ -31,14 +31,18 @@ satuan = {
 @app.route("/", methods=["POST"])
 def whatsapp_reply():
     # Kontrol akses bot
-    bot_aktif = False  # Ubah ke True jika ingin bot aktif
+    bot_aktif = os.getenv("BOT_AKTIF", "true").lower() == "true"
+    nomor_admin = "+6285838810436"
 
     resp = MessagingResponse()
     msg = resp.message()
 
-    if not bot_aktif:
-        msg.body("⚠️ Bot saat ini sedang tidak tersedia. Silakan coba lagi nanti.")
+    sender = request.values.get("From", "")
+
+    if not bot_aktif and nomor_admin not in sender:
+        msg.body("⚠️ Bot saat ini tidak tersedia untuk umum.")
         return str(resp)
+        
     # Ambil pesan masuk
     incoming_msg = request.values.get("Body", "").strip().lower()
     resp = MessagingResponse()
