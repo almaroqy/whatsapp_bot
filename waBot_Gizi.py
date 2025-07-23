@@ -30,7 +30,7 @@ satuan = {
 @app.route("/", methods=["POST"])
 def whatsapp_reply():
     bot_aktif = os.getenv("BOT_AKTIF", "true").lower() == "true"
-    nomor_admin = "whatsapp:+6285838810436"
+    nomor_admin = "whatsapp:+6285947407249"
 
     resp = MessagingResponse()
     msg = resp.message()
